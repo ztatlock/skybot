@@ -16,22 +16,26 @@ def mpd(inp, bot=None, say=None, pm=None):
   arg = inp[1:]
 
   def queue():
+    # fetch and format queue
+    q = con.playlistinfo()
+    for i in range(len(q)):
+      q[i] = '  %02d %s - %s - %s' % \
+          (i, q[i]['artist'], q[i]['album'], q[i]['title'])
+    # get offset
     try:
       i = int(arg[0])
     except:
       i = 0
-    j = i + 5
-    q = con.playlistinfo()[i:j]
-    say('Queue (%d to %d):' % (i, j))
-    for s in q:
-      say('  %s - %s - %s' %
-          (s['artist'], s['album'], s['title']))
+    # say first few results (avoid flooding)
+    say('Queue:')
+    for s in q[i:i+5]:
+      say(s)
 
   def playing():
     x = con.status()
     if x['state'] == 'play':
       s = con.playlistid(x['songid'])[0]
-      say('Now playing: %s - %s - %s' %
+      say('Now Playing: %s - %s - %s' %
           (s['artist'], s['album'], s['title']))
     else:
       say('Not playing.')
@@ -69,20 +73,20 @@ def mpd(inp, bot=None, say=None, pm=None):
     con.clear()
     say('Cleared playlist.')
 
+  def up():
+    con.update()
+    say('Updated database.')
+
   try:
-    { 'q'       : lambda x: queue()
-    , 'queue'   : lambda x: queue()
-    , '?'       : lambda x: playing()
-    , 'now'     : lambda x: playing()
-    , 'playing' : lambda x: playing()
-    , '+t'      : lambda x: add(con.search, 'title', ' '.join(arg))
-    , '+a'      : lambda x: add(con.search, 'album', ' '.join(arg))
-    , '+t!'     : lambda x: add(con.find, 'title', ' '.join(arg))
-    , '+a!'     : lambda x: add(con.find, 'album', ' '.join(arg))
-    , '-'       : lambda x: rm()
-    , 'rm'      : lambda x: rm()
-    , 'remove'  : lambda x: rm()
-    , 'clear'   : lambda x: clear()
+    { 'q'     : lambda x: queue()
+    , '?'     : lambda x: playing()
+    , '+t'    : lambda x: add(con.search, 'title', ' '.join(arg))
+    , '+a'    : lambda x: add(con.search, 'album', ' '.join(arg))
+    , '+t!'   : lambda x: add(con.find, 'title', ' '.join(arg))
+    , '+a!'   : lambda x: add(con.find, 'album', ' '.join(arg))
+    , '-'     : lambda x: rm()
+    , 'clear' : lambda x: clear()
+    , 'up'    : lambda x: up()
     }[cmd](0)
   except:
     say('Sorry, too dumb to "%s".' % cmd)
