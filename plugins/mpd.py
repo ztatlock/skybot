@@ -77,18 +77,61 @@ def mpd(inp, bot=None, say=None, pm=None):
     con.update()
     say('Updated database.')
 
-  try:
-    { 'q'     : lambda x: queue()
-    , '?'     : lambda x: playing()
-    , '+t'    : lambda x: add(con.search, 'title', ' '.join(arg))
-    , '+a'    : lambda x: add(con.search, 'album', ' '.join(arg))
-    , '+t!'   : lambda x: add(con.find, 'title', ' '.join(arg))
-    , '+a!'   : lambda x: add(con.find, 'album', ' '.join(arg))
-    , '-'     : lambda x: rm()
-    , 'clear' : lambda x: clear()
-    , 'up'    : lambda x: up()
-    }[cmd](0)
-  except:
+  def toggle_play():
+    x = con.status()
+    if x['state'] == 'play':
+      con.pause('1')
+      say('Paused.')
+    else:
+      con.pause('0')
+      say('Playing.')
+
+  def pause():
+    con.pause('1')
+    say('Paused.')
+
+  def play():
+    if len(arg) == 0:
+      con.play('0')
+      say('Playing.')
+    else:
+      con.play(arg[0])
+      say('Playing %s.' % arg[0])
+
+  cmd_tab = \
+    { ('q', 'queue',):
+        lambda x: queue()
+    , ('', '?', 'now', 'playing',):
+        lambda x: playing()
+    , ('+', '+t', 'add',):
+        lambda x: add(con.search, 'title', ' '.join(arg))
+    , ('+a', 'add-album',):
+        lambda x: add(con.search, 'album', ' '.join(arg))
+    , ('+!', '+t!', 'add!',):
+        lambda x: add(con.find, 'title', ' '.join(arg))
+    , ('+a!', 'add-album!',):
+        lambda x: add(con.find, 'album', ' '.join(arg))
+    , ('-', 'rm', 'remove',):
+        lambda x: rm()
+    , ('clear',):
+        lambda x: clear()
+    , ('u', 'up',):
+        lambda x: up()
+    , ('p',):
+        lambda x: toggle_play()
+    , ('play',):
+        lambda x: play()
+    , ('pause',):
+        lambda x: pause()
+    }
+
+  ok = False
+  for k in cmd_tab:
+    if cmd in k:
+      cmd_tab[k](0)
+      ok = True
+      break
+  if not ok:
     say('Sorry, too dumb to "%s".' % cmd)
 
   con.disconnect()
