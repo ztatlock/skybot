@@ -19,15 +19,22 @@ def mpd(inp, bot=None, say=None, pm=None):
     # fetch and format queue
     q = con.playlistinfo()
     for i in range(len(q)):
-      q[i] = '  %02d %s - %s - %s' % \
-          (i, q[i]['artist'], q[i]['album'], q[i]['title'])
+      try:
+        q[i] = '  %02d %s - %s - %s' % \
+            (i, q[i]['artist'], q[i]['album'], q[i]['title'])
+      except:
+        q[i] = '  %02d Error: bad artist, album, or title' % i
     # get offset
     try:
       i = int(arg[0])
+      if i < 0:
+        i = len(q) + i
+      if i < 0:
+        i = 0
     except:
       i = 0
-    # pm first few results (avoid clutter, flooding)
-    pm('Queue:')
+    # pm first few results to avoid clutter and flooding
+    pm('Queue (%d total):' % len(q))
     for s in q[i:i+5]:
       pm(s)
 
