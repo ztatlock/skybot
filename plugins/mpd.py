@@ -26,10 +26,10 @@ def mpd(inp, bot=None, say=None, pm=None):
       i = int(arg[0])
     except:
       i = 0
-    # say first few results (avoid flooding)
-    say('Queue:')
+    # pm first few results (avoid clutter, flooding)
+    pm('Queue:')
     for s in q[i:i+5]:
-      say(s)
+      pm(s)
 
   def playing():
     x = con.status()
