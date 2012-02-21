@@ -1,6 +1,10 @@
 from util import hook
 from mpd import MPDClient
 
+## TODO
+##   move
+##   help
+
 @hook.command
 def mpd(inp, bot=None, say=None, pm=None):
   try:
@@ -15,15 +19,23 @@ def mpd(inp, bot=None, say=None, pm=None):
   cmd = inp[0]
   arg = inp[1:]
 
+  def fmt(catg, s):
+    try:
+      if catg == 'title':
+        return '%s - %s - %s' % (s['artist'], s['album'], s['title'])
+      elif catg == 'album':
+        return '%s - %s' % (s['artist'], s['album'])
+      elif catg == 'artist':
+        return '%s' % (s['artist'])
+      else:
+        return 'Error: unknown catg for fmt'
+    except:
+      return 'Error: bad artist, album, or title'
+
   def queue():
-    # fetch and format queue
     q = con.playlistinfo()
     for i in range(len(q)):
-      try:
-        q[i] = '  %02d %s - %s - %s' % \
-            (i, q[i]['artist'], q[i]['album'], q[i]['title'])
-      except:
-        q[i] = '  %02d Error: bad artist, album, or title' % i
+      q[i] = '  %02d %s' % (i, fmt('title', q[i]))
     # get offset
     try:
       i = int(arg[0])
@@ -33,7 +45,6 @@ def mpd(inp, bot=None, say=None, pm=None):
         i = 0
     except:
       i = 0
-    # pm first few results to avoid clutter and flooding
     pm('Queue (%d total):' % len(q))
     for s in q[i:i+5]:
       pm(s)
@@ -42,14 +53,24 @@ def mpd(inp, bot=None, say=None, pm=None):
     x = con.status()
     if x['state'] == 'play':
       s = con.playlistid(x['songid'])[0]
-      say('Now Playing: %s - %s - %s' %
-          (s['artist'], s['album'], s['title']))
+      say('Now Playing: %s' % fmt('title', s))
     else:
       say('Not playing.')
 
+  def search(catg, x):
+    res = con.search(catg, x)
+    res = [fmt(catg, r) for r in res]
+    res = list(set(res)) # remove dups
+    if res != []:
+      pm('Results for %s "%s" (%d total):' % (catg, x, len(res)))
+      for r in res[:5]:
+        pm('  %s' % r)
+    else:
+      say('Sorry, no results for %s "%s"' % (catg, x))
+
   def add(search, catg, x):
     res = search(catg, x)
-    if res !=[]:
+    if res != []:
       for s in res:
         con.add(s['file'])
       say('Added %s "%s" (%d).' % (catg, x, len(res)))
@@ -108,8 +129,14 @@ def mpd(inp, bot=None, say=None, pm=None):
   cmd_tab = \
     { ('q', 'queue',):
         lambda x: queue()
-    , ('', '?', 'now', 'playing',):
+    , ('', 'n', 'now', 'playing',):
         lambda x: playing()
+    , ('?', '?t', 'search',):
+        lambda x: search('title', ' '.join(arg))
+    , ('?a', 'search-album',):
+        lambda x: search('album', ' '.join(arg))
+    , ('?A', 'search-artist',):
+        lambda x: search('artist', ' '.join(arg))
     , ('+', '+t', 'add',):
         lambda x: add(con.search, 'title', ' '.join(arg))
     , ('+a', 'add-album',):
