@@ -1,9 +1,6 @@
 from util import hook
 from mpd import MPDClient
 
-## TODO
-##   mpd password support
-
 # truncate queue and search to avoid flooding
 TRUNC = 5
 
@@ -16,6 +13,9 @@ def mpd(inp, bot=None, say=None, pm=None):
     return "MPD not configured."
   con = MPDClient()
   con.connect(h, p)
+  if 'mpd_pass' in bot.config:
+    a = str(bot.config['mpd_pass'])
+    con.password(a)
 
   inp = inp.split(' ')
   cmd = inp[0]
