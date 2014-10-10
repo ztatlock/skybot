@@ -3,15 +3,15 @@ article'''
 
 from util import hook, http
 
-api_url = "http://encyclopediadramatica.ch/api.php?action=opensearch"
-ed_url = "http://encyclopediadramatica.ch/"
+api_url = "http://encyclopediadramatica.se/api.php?action=opensearch"
+ed_url = "http://encyclopediadramatica.se/"
 
 
 @hook.command('ed')
 @hook.command
 def drama(inp):
     '''.drama <phrase> -- gets first paragraph of Encyclopedia Dramatica ''' \
-    '''article on <phrase>'''
+        '''article on <phrase>'''
 
     j = http.get_json(api_url, search=inp)
     if not j[1]:
